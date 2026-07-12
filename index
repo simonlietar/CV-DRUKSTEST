@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KlimaatWatt — Proefverslag druktest CV-leidingen</title>
+<style>
+  :root{
+    --kw-groen:#1a5c4a;
+    --kw-groen-donker:#0e3d30;
+    --kw-geel:#f2b924;
+    --inkt:#22302b;
+    --grijs:#5c6b64;
+    --lijn:#ccd6d1;
+    --lijn-licht:#e4ebe8;
+    --papier:#fbfcfb;
+    --veld:#ffffff;
+    --pass:#1a7a43;
+    --fail:#b3352b;
+    --waarschuwing:#9a6b00;
+    --waarschuwing-bg:#fdf4dd;
+    --info-bg:#eef4f1;
+    --mono:'IBM Plex Mono','Consolas','Menlo',monospace;
+    --sans:'Archivo','Segoe UI',system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{font-family:var(--sans);color:var(--inkt);background:#e9eeec;font-size:14px;line-height:1.45}
+  .vel{max-width:900px;margin:0 auto;background:var(--papier);min-height:100vh;box-shadow:0 0 40px rgba(14,61,48,.12)}
+
+  header{background:var(--kw-groen-donker);color:#fff;padding:26px 40px 22px;position:relative;overflow:hidden}
+  header::after{content:"";position:absolute;right:-30px;top:-40px;width:220px;height:220px;border:26px solid rgba(242,185,36,.16);border-radius:50%}
+  .merk{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .merk .naam{font-size:26px;font-weight:800;letter-spacing:-.02em}
+  .merk .naam span{color:var(--kw-geel)}
+  .merk .sub{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.75)}
+  h1{margin-top:14px;font-size:21px;font-weight:700;letter-spacing:-.01em}
+  .kop-norm{margin-top:4px;font-family:var(--mono);font-size:12px;color:var(--kw-geel);position:relative;z-index:1}
+  .kop-meta{display:flex;gap:26px;margin-top:14px;flex-wrap:wrap;position:relative;z-index:1}
+  .kop-meta label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.7);margin-bottom:3px}
+  .kop-meta input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:4px;padding:5px 8px;font-family:var(--mono);font-size:13px;width:170px}
+  .kop-meta input::placeholder{color:rgba(255,255,255,.45)}
+
+  .werkbalk{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 40px;background:#fff;border-bottom:1px solid var(--lijn);position:sticky;top:0;z-index:50}
+  .werkbalk .ruimte{flex:1}
+  button{font-family:var(--sans);font-size:13px;font-weight:600;border:1px solid var(--kw-groen);color:var(--kw-groen);background:#fff;border-radius:6px;padding:8px 14px;cursor:pointer}
+  button:hover{background:var(--info-bg)}
+  button.primair{background:var(--kw-groen);color:#fff}
+  button.primair:hover{background:var(--kw-groen-donker)}
+  button:focus-visible{outline:3px solid var(--kw-geel);outline-offset:1px}
+  input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--kw-groen);outline-offset:0}
+
+  main{padding:10px 40px 60px}
+  section.blok{margin-top:26px;border:1px solid var(--lijn);border-radius:10px;background:#fff;overflow:hidden}
+  .blok>.titel{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding:12px 18px;background:var(--kw-groen);color:#fff}
+  .blok>.titel h2{font-size:15px;font-weight:700;letter-spacing:.01em}
+  .blok>.titel .norm{font-family:var(--mono);font-size:11px;color:var(--kw-geel)}
+  .blok .inhoud{padding:18px}
+
+  .rooster{display:grid;grid-template-columns:repeat(12,1fr);gap:12px 16px}
+  .veld{display:flex;flex-direction:column;gap:4px}
+  .veld label{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--grijs);font-weight:700}
+  .veld input[type=text],.veld input[type=date],.veld input[type=time],.veld input[type=number],.veld select,.veld textarea{
+    border:1px solid var(--lijn);border-radius:5px;padding:7px 9px;font-family:var(--mono);font-size:13px;background:var(--veld);color:var(--inkt);width:100%}
+  .veld textarea{font-family:var(--sans);min-height:56px;resize:vertical}
+  .veld .hint{font-size:10.5px;color:var(--grijs);font-weight:400;text-transform:none;letter-spacing:0}
+  .c12{grid-column:span 12}.c8{grid-column:span 8}.c6{grid-column:span 6}.c4{grid-column:span 4}.c3{grid-column:span 3}
+  @media(max-width:640px){
+    main,header,.werkbalk{padding-left:16px;padding-right:16px}
+    .c8,.c6,.c4,.c3{grid-column:span 12}
+  }
+
+  .subkop{margin:20px 0 10px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--kw-groen-donker);border-bottom:2px solid var(--kw-geel);padding-bottom:4px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .subkop .ref{font-family:var(--mono);font-size:10px;color:var(--grijs);text-transform:none;letter-spacing:0}
+
+  .stap{display:grid;grid-template-columns:44px 1fr;gap:0 14px;padding:13px 0;border-bottom:1px dashed var(--lijn-licht)}
+  .stap:last-child{border-bottom:none}
+  .stap .nr{width:32px;height:32px;border-radius:50%;background:var(--kw-groen-donker);color:var(--kw-geel);font-family:var(--mono);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+  .stap .kop{font-weight:700;font-size:13.5px;margin-top:6px}
+  .stap .body{grid-column:2;margin-top:6px}
+  .stap .body p{font-size:12.5px;color:var(--grijs);margin-bottom:8px}
+
+  .checkregel{display:flex;align-items:flex-start;gap:8px;padding:4px 0;font-size:13px}
+  .checkregel input[type=checkbox]{width:16px;height:16px;margin-top:2px;accent-color:var(--kw-groen);flex-shrink:0}
+
+  .pfn{display:flex;gap:6px;flex-wrap:wrap}
+  .pfn label{display:flex;align-items:center;gap:5px;border:1px solid var(--lijn);border-radius:5px;padding:5px 10px;font-size:12.5px;font-weight:600;cursor:pointer;text-transform:none;letter-spacing:0;color:var(--inkt)}
+  .pfn input{accent-color:var(--kw-groen)}
+  .pfn label:has(input:checked){border-color:var(--kw-groen);background:var(--info-bg)}
+  .pfn.eind label:has(input[value=pass]:checked){border-color:var(--pass);background:#e9f5ee;color:var(--pass)}
+  .pfn.eind label:has(input[value=fail]:checked){border-color:var(--fail);background:#fbeeec;color:var(--fail)}
+
+  .berekend{font-family:var(--mono);font-size:13px;background:var(--info-bg);border:1px dashed var(--kw-groen);border-radius:5px;padding:7px 9px;color:var(--kw-groen-donker);min-height:33px}
+  .waarschuwing{background:var(--waarschuwing-bg);border-left:4px solid var(--kw-geel);color:var(--waarschuwing);padding:8px 12px;font-size:12.5px;border-radius:0 5px 5px 0;margin-top:8px}
+  .nota{background:var(--info-bg);border-left:4px solid var(--kw-groen);padding:8px 12px;font-size:12.5px;color:var(--kw-groen-donker);border-radius:0 5px 5px 0;margin-top:8px}
+  .verborgen{display:none!important}
+
+  .handtekeningen{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:6px}
+  @media(max-width:640px){.handtekeningen{grid-template-columns:1fr}}
+  .ht{border:1px solid var(--lijn);border-radius:8px;padding:14px}
+  .ht .rol{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--grijs);font-weight:700}
+  .ht input{border:none;border-bottom:1px solid var(--lijn);border-radius:0;width:100%;font-family:var(--mono);font-size:13px;padding:6px 2px;background:transparent}
+  .ht .lijnlabel{font-size:10px;color:var(--grijs);margin-top:2px}
+  .ht .tekenvak{height:64px;border-bottom:1.5px solid var(--inkt);margin-top:26px}
+
+  footer{padding:16px 40px 30px;font-size:11px;color:var(--grijs);border-top:1px solid var(--lijn-licht)}
+  footer .bronnen{font-family:var(--mono);font-size:10.5px;line-height:1.7}
+
+  @media print{
+    body{background:#fff;font-size:11.5px}
+    .vel{box-shadow:none;max-width:none}
+    .werkbalk,.geen-print{display:none!important}
+    header{padding:18px 24px}
+    main{padding:0 24px 20px}
+    section.blok{break-inside:avoid;margin-top:14px;border-radius:6px}
+    .stap{break-inside:avoid;padding:8px 0}
+    input,select,textarea{border-color:#999!important}
+    button{display:none}
+    footer{padding:12px 24px}
+    header::after{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="vel">
+
+<header>
+  <div class="merk">
+    <div class="naam">Klimaat<span>Watt</span></div>
+    <div class="sub">Warmtepompen &middot; Zonnepanelen &middot; Klimaattechniek</div>
+  </div>
+  <h1>Proefverslag druktest CV-/koelleidingen</h1>
+  <div class="kop-norm">Gesloten watervoerend circuit &middot; NBN EN 14336:2025 &sect;6 + Bijlage D</div>
+  <div class="kop-meta">
+    <div><label for="verslagnr">Verslagnummer</label><input id="verslagnr" type="text" placeholder="KW-CV-2026-___"></div>
+    <div><label for="verslagdatum">Datum verslag</label><input id="verslagdatum" type="date"></div>
+  </div>
+</header>
+
+<div class="werkbalk geen-print">
+  <button class="primair" onclick="window.print()">Afdrukken / PDF</button>
+  <button onclick="exporteerJSON()">Opslaan als JSON</button>
+  <button onclick="document.getElementById('jsonBestand').click()">JSON laden</button>
+  <input type="file" id="jsonBestand" accept=".json" class="verborgen" onchange="importeerJSON(event)">
+  <div class="ruimte"></div>
+  <button onclick="wisFormulier()">Formulier wissen</button>
+</div>
+
+<main>
+
+<section class="blok">
+  <div class="titel"><h2>Project- en werfgegevens</h2></div>
+  <div class="inhoud">
+    <div class="rooster">
+      <div class="veld c6"><label for="project">Project</label><input type="text" id="project"></div>
+      <div class="veld c6"><label for="reftekening">Referentie / tekening</label><input type="text" id="reftekening"></div>
+      <div class="veld c12"><label for="werfadres">Werfadres</label><input type="text" id="werfadres"></div>
+      <div class="veld c6"><label for="klantnaam">Bouwheer / klant</label><input type="text" id="klantnaam"></div>
+      <div class="veld c6"><label for="klantvert">Vertegenwoordiger bouwheer (indien aanwezig)</label><input type="text" id="klantvert"></div>
+      <div class="veld c6"><label for="uitvoerder">Proef uitgevoerd door</label><input type="text" id="uitvoerder" placeholder="Naam medewerker KlimaatWatt"></div>
+      <div class="veld c3"><label for="proefdatum">Datum proef</label><input type="date" id="proefdatum"></div>
+      <div class="veld c3"><label for="proefuur">Startuur</label><input type="time" id="proefuur"></div>
+    </div>
+    <div class="nota">De bouwheer of zijn vertegenwoordiger werd vooraf op de hoogte gebracht van de proef en kreeg de kans om ze bij te wonen (EN 14336:2025, &sect;6.1).
+      <span class="pfn" style="display:inline-flex;margin-left:8px">
+        <label><input type="radio" name="klantVerwittigd" value="ja"> Ja</label>
+        <label><input type="radio" name="klantVerwittigd" value="nee"> Nee</label>
+      </span>
+    </div>
+  </div>
+</section>
+
+<section class="blok">
+  <div class="titel">
+    <h2>Geteste sectie &amp; voorbereiding</h2>
+    <span class="norm">EN 14336:2025 &sect;6.1</span>
+  </div>
+  <div class="inhoud">
+
+    <div class="rooster">
+      <div class="veld c6"><label for="cvSectie">Geteste sectie</label><input type="text" id="cvSectie" placeholder="bv. verdeelnet gelijkvloers, vloerverwarming V1"></div>
+      <div class="veld c6"><label for="cvMateriaal">Leidingmateriaal / verbindingstype</label><input type="text" id="cvMateriaal" placeholder="bv. meerlagenbuis 16&times;2, persfitting"></div>
+      <div class="veld c3"><label for="cvWerkdruk">Max. werkdruk systeem (bar)</label><input type="number" id="cvWerkdruk" step="0.1" min="0" value="3" oninput="rekenCV()"></div>
+      <div class="veld c3"><label for="cvVolume">Circuitvolume (liter)</label><input type="number" id="cvVolume" step="1" min="0" oninput="rekenCV()"></div>
+      <div class="veld c3"><label for="cvTempOmg">Omgevingstemp. (&deg;C)</label><input type="number" id="cvTempOmg" step="0.5" oninput="rekenCV()"></div>
+      <div class="veld c3"><label for="cvTempMedium">Temp. testmedium (&deg;C)</label><input type="number" id="cvTempMedium" step="0.5" oninput="rekenCV()"></div>
+    </div>
+    <div class="waarschuwing verborgen" id="cvTempWaarschuwing">
+      &Delta;T tussen medium en omgeving &gt; 10 K: wacht op thermisch evenwicht v&oacute;&oacute;r het aflezen van de begindruk en noteer de stabilisatietijd (EN 14336:2025, &sect;6.1).
+    </div>
+
+    <div class="subkop">Voorbereiding sectie <span class="ref">EN 14336:2025 &sect;6.1</span></div>
+    <div class="checkregel"><input type="checkbox" id="cvChk1"><label for="cvChk1">Sectie afgesloten met doppen, stoppen of blindflenzen — een gesloten kraan telt <strong>niet</strong> als dichte afsluiting</label></div>
+    <div class="checkregel"><input type="checkbox" id="cvChk2"><label for="cvChk2">Alle kranen b&iacute;nnen de geteste sectie staan volledig open</label></div>
+    <div class="checkregel"><input type="checkbox" id="cvChk3"><label for="cvChk3">Warmtepomp/ketel, expansievat en andere niet-drukbestendige componenten afgekoppeld of ge&iuml;soleerd</label></div>
+    <div class="checkregel"><input type="checkbox" id="cvChk4"><label for="cvChk4">Proef v&oacute;&oacute;r inwerken (chape, wand, schacht) en v&oacute;&oacute;r plaatsing isolatie</label></div>
+    <div class="checkregel"><input type="checkbox" id="cvChk5"><label for="cvChk5">Manometer op het laagst mogelijke punt van de sectie, geschikt bereik en resolutie</label></div>
+    <div class="checkregel"><input type="checkbox" id="cvChk6"><label for="cvChk6">Bij kunststof/meerlagenbuis: expansiegedrag verrekend volgens fabrikantvoorschrift</label></div>
+    <div class="nota"><strong>Vuistregel afsluitingen:</strong> een gesloten kraan telt enkel als afsluiting wanneer er b&uacute;itenlucht achter zit. Zit er ander leidingwerk achter de klep (zoals hier, in een gesloten circuit), dan kan een doorlekkende klepzitting het testmedium onzichtbaar laten wegstromen &mdash; daarom altijd doppen, stoppen of blindflenzen op de sectie-einden.</div>
+
+    <div class="rooster" style="margin-top:12px">
+      <div class="veld c4"><label for="cvInstrument">Meettoestel (merk/model)</label><input type="text" id="cvInstrument"></div>
+      <div class="veld c4"><label for="cvSerienr">Serienummer</label><input type="text" id="cvSerienr"></div>
+      <div class="veld c4"><label>Kalibratiecertificaat</label>
+        <span class="pfn">
+          <label><input type="radio" name="cvKalibratie" value="ja"> Ja</label>
+          <label><input type="radio" name="cvKalibratie" value="nee"> Nee</label>
+          <label><input type="radio" name="cvKalibratie" value="nvt"> N.v.t.</label>
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="blok">
+  <div class="titel">
+    <h2>Uitvoering druktest</h2>
+    <span class="norm">EN 14336:2025 &sect;6.4 &ndash; &sect;6.5</span>
+  </div>
+  <div class="inhoud">
+
+    <div class="subkop">Stap 1 — Dichtheidsproef (lage druk) <span class="ref">EN 14336:2025 &sect;6.4</span></div>
+    <div class="stap">
+      <div class="nr">1a</div><div class="kop">Testcondities</div>
+      <div class="body">
+        <p>Pneumatisch met olievrije lucht of inert gas, u&iacute;t te voeren v&oacute;&oacute;r de belastingsproef. De testdruk is een vaste normwaarde (geen berekening): <strong>minimaal 150&nbsp;mbar</strong>. Duur: 120&nbsp;min tot 100&nbsp;l circuitinhoud, +20&nbsp;min per bijkomende 100&nbsp;l, max. 360&nbsp;min. De druk moet constant blijven.</p>
+        <div class="rooster">
+          <div class="veld c3"><label for="cvDpMedium">Testmedium</label>
+            <select id="cvDpMedium"><option>Olievrije lucht</option><option>Stikstof (inert gas)</option><option>Water</option></select>
+          </div>
+          <div class="veld c3"><label for="cvDpDruk">Testdruk (mbar)</label><input type="number" id="cvDpDruk" step="10" min="0" value="150" oninput="rekenCV()">
+            <span class="hint">Min. 150 mbar &mdash; blijf binnen het LBP-detectievenster van je fittingfabrikant</span>
+          </div>
+          <div class="veld c3"><label>Vereiste duur (auto)</label><div class="berekend" id="cvDpDuurAuto">—</div></div>
+          <div class="veld c3"><label for="cvDpDuur">Werkelijke duur (min)</label><input type="number" id="cvDpDuur" step="5" min="0"></div>
+          <div class="veld c3"><label for="cvDpBegin">Begindruk (mbar)</label><input type="number" id="cvDpBegin" step="1"></div>
+          <div class="veld c3"><label for="cvDpEind">Einddruk (mbar)</label><input type="number" id="cvDpEind" step="1"></div>
+          <div class="veld c3"><label for="cvDpStabil">Stabilisatietijd (min)</label><input type="number" id="cvDpStabil" step="5" min="0"></div>
+          <div class="veld c3"><label>Resultaat dichtheidsproef</label>
+            <span class="pfn eind">
+              <label><input type="radio" name="cvDpResultaat" value="pass"> Dicht</label>
+              <label><input type="radio" name="cvDpResultaat" value="fail"> Lek</label>
+            </span>
+          </div>
+        </div>
+        <div class="waarschuwing verborgen" id="cvDpDrukWaarschuwing">Testdruk lager dan het normminimum van 150 mbar.</div>
+        <div class="checkregel" style="margin-top:6px"><input type="checkbox" id="cvChkZeep"><label for="cvChkZeep">Verbindingen afgezocht op ontsnappende lucht (schuimmiddel op las-/soldeer-/persverbindingen, verenigbaar met materiaal)</label></div>
+      </div>
+    </div>
+
+    <div class="subkop">Stap 2 — Belastingsproef (volle druk) <span class="ref">EN 14336:2025 &sect;6.5</span></div>
+    <div class="stap">
+      <div class="nr">2a</div><div class="kop">Methode en testdruk</div>
+      <div class="body">
+        <div class="rooster">
+          <div class="veld c4"><label for="cvBpMethode">Methode</label>
+            <select id="cvBpMethode" onchange="rekenCV()">
+              <option value="hydraulisch">Hydraulisch (water)</option>
+              <option value="pneu50">Pneumatisch — DN &le; 50</option>
+              <option value="pneuGroot">Pneumatisch — DN &gt; 50</option>
+            </select>
+          </div>
+          <div class="veld c4"><label>Vereiste testdruk (auto)</label><div class="berekend" id="cvBpDrukAuto">—</div></div>
+          <div class="veld c4"><label>Vereiste duur (auto)</label><div class="berekend" id="cvBpDuurAuto">—</div></div>
+          <div class="veld c3"><label for="cvBpDruk">Toegepaste testdruk (bar)</label><input type="number" id="cvBpDruk" step="0.1" min="0" oninput="rekenCV()"></div>
+          <div class="veld c3"><label for="cvBpDuur">Werkelijke duur (min)</label><input type="number" id="cvBpDuur" step="5" min="0"></div>
+          <div class="veld c3"><label for="cvBpBegin">Begindruk (bar)</label><input type="number" id="cvBpBegin" step="0.05"></div>
+          <div class="veld c3"><label for="cvBpEind">Einddruk (bar)</label><input type="number" id="cvBpEind" step="0.05"></div>
+        </div>
+        <div class="waarschuwing verborgen" id="cvBpDrukWaarschuwing"></div>
+        <div class="nota" id="cvBpNotaHydraulisch">Hydraulisch: sectie van onder naar boven vullen en ontluchten; tijdens het vullen en de hele proef visueel controleren op lekken. Bij systemen met &gt; 20 m hoogteverschil worden testdruk en meetpositie door het ontwerp bepaald. Ontwerp mag kortere duur dan 360 min voorschrijven, absoluut minimum 120 min.</div>
+        <div class="nota verborgen" id="cvBpNotaPneu">Pneumatisch: enkel indien regelgeving inzake persgassen dit toelaat. Verantwoordelijke aanstellen, onbevoegden weghouden bij het op druk brengen, toevoer met reduceer-, veiligheids- en ontlastklep (fig. 2 van de norm), en na afloop volledige drukontlasting controleren.</div>
+        <div class="rooster" style="margin-top:10px">
+          <div class="veld c4"><label>Visuele inspectie verbindingen uitgevoerd</label>
+            <span class="pfn"><label><input type="radio" name="cvBpVisueel" value="ja"> Ja</label><label><input type="radio" name="cvBpVisueel" value="nee"> Nee</label></span>
+          </div>
+          <div class="veld c4"><label>Druk volledig ontlast na proef (pneum.)</label>
+            <span class="pfn"><label><input type="radio" name="cvBpOntlast" value="ja"> Ja</label><label><input type="radio" name="cvBpOntlast" value="nvt"> N.v.t.</label></span>
+          </div>
+          <div class="veld c4"><label>Resultaat belastingsproef</label>
+            <span class="pfn eind">
+              <label><input type="radio" name="cvBpResultaat" value="pass"> Geslaagd</label>
+              <label><input type="radio" name="cvBpResultaat" value="fail"> Niet geslaagd</label>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stap">
+      <div class="nr">3</div><div class="kop">Eindoordeel sectie</div>
+      <div class="body">
+        <p>Bij een gefaalde proef: lek lokaliseren, herstellen en de proef met succes herhalen. Balanceren en indienststelling van gesloten circuits pas n&aacute; een geslaagde en gedocumenteerde druktest.</p>
+        <div class="rooster">
+          <div class="veld c4"><label>Geteste sectie is dicht &amp; drukbestendig</label>
+            <span class="pfn eind">
+              <label><input type="radio" name="cvEind" value="pass"> Ja</label>
+              <label><input type="radio" name="cvEind" value="fail"> Nee</label>
+            </span>
+          </div>
+          <div class="veld c8"><label for="cvLekken">Vastgestelde lekken + locatie / herstelling</label><input type="text" id="cvLekken" placeholder="Geen"></div>
+          <div class="veld c12"><label for="cvOpmerkingen">Opmerkingen</label><textarea id="cvOpmerkingen"></textarea></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="blok">
+  <div class="titel"><h2>Ondertekening</h2></div>
+  <div class="inhoud">
+    <div class="handtekeningen">
+      <div class="ht">
+        <div class="rol">Voor KlimaatWatt (uitvoerder)</div>
+        <input type="text" id="htUitvoerder" placeholder="Naam">
+        <div class="lijnlabel">Naam</div>
+        <div class="tekenvak"></div>
+        <div class="lijnlabel">Handtekening &amp; datum</div>
+      </div>
+      <div class="ht">
+        <div class="rol">Voor de bouwheer / vertegenwoordiger</div>
+        <input type="text" id="htKlant" placeholder="Naam">
+        <div class="lijnlabel">Naam</div>
+        <div class="tekenvak"></div>
+        <div class="lijnlabel">Handtekening &amp; datum</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="bronnen">
+    Bron: NBN EN 14336:2025 &mdash; Heating systems in buildings, Installation and commissioning of water based heating and cooling systems (&sect;6 Pressure test, Bijlage D).
+  </div>
+  <p style="margin-top:8px">Dit verslag maakt deel uit van het opleveringsdossier en wordt overhandigd aan de bouwheer of zijn vertegenwoordiger. Bewaar een kopie in het projectdossier van KlimaatWatt.</p>
+</footer>
+
+</div>
+
+<script>
+function rekenCV(){
+  const num=id=>{const v=parseFloat(document.getElementById(id).value);return isNaN(v)?null:v;};
+
+  const vol=num('cvVolume');
+  let duurTekst='Vul circuitvolume in';
+  if(vol!==null){
+    let duur=120+Math.max(0,Math.ceil((vol-100)/100))*20;
+    duur=Math.min(duur,360);
+    duurTekst='min. '+duur+' min'+(duur===360?' (plafond)':'');
+  }
+  document.getElementById('cvDpDuurAuto').textContent=duurTekst;
+
+  const dpDruk=num('cvDpDruk');
+  document.getElementById('cvDpDrukWaarschuwing').classList.toggle('verborgen',!(dpDruk!==null&&dpDruk<150));
+
+  const methode=document.getElementById('cvBpMethode').value;
+  const werkdruk=num('cvWerkdruk');
+  const bpDruk=num('cvBpDruk');
+  let drukAuto='—',duurAuto='—',waarschuwing='';
+
+  if(methode==='hydraulisch'){
+    if(werkdruk!==null){
+      drukAuto='&ge; '+(werkdruk*1.3).toFixed(1).replace('.',',')+' bar (1,3 &times; werkdruk)';
+      if(bpDruk!==null&&bpDruk<werkdruk*1.3-1e-9)
+        waarschuwing='Toegepaste testdruk ligt onder het vereiste minimum van 1,3 &times; de maximale werkdruk.';
+    }else drukAuto='Vul max. werkdruk in';
+    duurAuto='360 min (ontwerp mag korter; abs. min. 120 min)';
+  }else if(methode==='pneu50'){
+    drukAuto='3,0 &plusmn; 0,2 bar';
+    duurAuto='&ge; 120 min, druk constant';
+    if(bpDruk!==null&&(bpDruk<2.8||bpDruk>3.2))
+      waarschuwing='Pneumatische belastingsproef DN &le; 50 vereist 3 &plusmn; 0,2 bar.';
+  }else{
+    drukAuto='1,0 &plusmn; 0,1 bar';
+    duurAuto='&ge; 120 min, druk constant';
+    if(bpDruk!==null&&(bpDruk<0.9||bpDruk>1.1))
+      waarschuwing='Pneumatische belastingsproef DN &gt; 50 vereist 1 &plusmn; 0,1 bar.';
+  }
+  document.getElementById('cvBpDrukAuto').innerHTML=drukAuto;
+  document.getElementById('cvBpDuurAuto').innerHTML=duurAuto;
+  const w=document.getElementById('cvBpDrukWaarschuwing');
+  w.innerHTML=waarschuwing;
+  w.classList.toggle('verborgen',!waarschuwing);
+  document.getElementById('cvBpNotaHydraulisch').classList.toggle('verborgen',methode!=='hydraulisch');
+  document.getElementById('cvBpNotaPneu').classList.toggle('verborgen',methode==='hydraulisch');
+
+  const tO=num('cvTempOmg'),tM=num('cvTempMedium');
+  document.getElementById('cvTempWaarschuwing').classList.toggle('verborgen',
+    !(tO!==null&&tM!==null&&Math.abs(tO-tM)>10));
+}
+
+function verzamel(){
+  const data={_document:'KlimaatWatt druktest CV — NBN EN 14336:2025',_versie:1};
+  document.querySelectorAll('input,select,textarea').forEach(el=>{
+    if(!el.id&&!el.name)return;
+    if(el.type==='file')return;
+    if(el.type==='checkbox')data['#'+el.id]=el.checked;
+    else if(el.type==='radio'){if(el.checked)data['@'+el.name]=el.value;}
+    else data['#'+el.id]=el.value;
+  });
+  return data;
+}
+function exporteerJSON(){
+  const data=verzamel();
+  const naam=(document.getElementById('verslagnr').value||'druktest-cv-verslag').replace(/[^\w\-]/g,'_');
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=naam+'.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function importeerJSON(ev){
+  const f=ev.target.files[0];
+  if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const data=JSON.parse(r.result);
+      Object.entries(data).forEach(([k,v])=>{
+        if(k.startsWith('#')){
+          const el=document.getElementById(k.slice(1));
+          if(!el)return;
+          if(el.type==='checkbox')el.checked=!!v;else el.value=v;
+        }else if(k.startsWith('@')){
+          const el=document.querySelector('input[name="'+k.slice(1)+'"][value="'+v+'"]');
+          if(el)el.checked=true;
+        }
+      });
+      rekenCV();
+    }catch(e){alert('Kon het JSON-bestand niet lezen: '+e.message);}
+  };
+  r.readAsText(f);
+  ev.target.value='';
+}
+function wisFormulier(){
+  if(!confirm('Alle ingevulde gegevens wissen?'))return;
+  document.querySelectorAll('input,textarea').forEach(el=>{
+    if(el.type==='checkbox'||el.type==='radio')el.checked=el.defaultChecked;
+    else if(el.type!=='file')el.value=el.defaultValue;
+  });
+  document.querySelectorAll('select').forEach(el=>el.selectedIndex=0);
+  rekenCV();
+}
+
+document.getElementById('verslagdatum').valueAsDate=new Date();
+rekenCV();
+</script>
+</body>
+</html>
