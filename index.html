@@ -101,7 +101,9 @@
   .ht .rol{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--grijs);font-weight:700}
   .ht input{border:none;border-bottom:1px solid var(--lijn);border-radius:0;width:100%;font-family:var(--mono);font-size:13px;padding:6px 2px;background:transparent}
   .ht .lijnlabel{font-size:10px;color:var(--grijs);margin-top:2px}
-  .ht .tekenvak{height:64px;border-bottom:1.5px solid var(--inkt);margin-top:26px}
+  .ht .tekenblok{position:relative;margin-top:14px}
+  .ht .tekenblok canvas{width:100%;height:120px;display:block;border:1px dashed var(--lijn);border-radius:6px;background:#fff;touch-action:none;cursor:crosshair}
+  .ht .tekenwis{position:absolute;top:6px;right:6px;padding:3px 10px;font-size:11px;border-radius:4px}
 
   footer{padding:16px 40px 30px;font-size:11px;color:var(--grijs);border-top:1px solid var(--lijn-licht)}
   footer .bronnen{font-family:var(--mono);font-size:10.5px;line-height:1.7}
@@ -315,15 +317,25 @@
         <div class="rol">Voor KlimaatWatt (uitvoerder)</div>
         <input type="text" id="htUitvoerder" placeholder="Naam">
         <div class="lijnlabel">Naam</div>
-        <div class="tekenvak"></div>
-        <div class="lijnlabel">Handtekening &amp; datum</div>
+        <input type="date" id="htUitvoerderDatum">
+        <div class="lijnlabel">Datum ondertekening</div>
+        <div class="tekenblok">
+          <canvas id="htCanvasUitvoerder"></canvas>
+          <button type="button" class="tekenwis geen-print" onclick="wisHandtekening('htCanvasUitvoerder')">Wis</button>
+        </div>
+        <div class="lijnlabel">Handtekening (teken met vinger, stylus of muis)</div>
       </div>
       <div class="ht">
         <div class="rol">Voor de bouwheer / vertegenwoordiger</div>
         <input type="text" id="htKlant" placeholder="Naam">
         <div class="lijnlabel">Naam</div>
-        <div class="tekenvak"></div>
-        <div class="lijnlabel">Handtekening &amp; datum</div>
+        <input type="date" id="htKlantDatum">
+        <div class="lijnlabel">Datum ondertekening</div>
+        <div class="tekenblok">
+          <canvas id="htCanvasKlant"></canvas>
+          <button type="button" class="tekenwis geen-print" onclick="wisHandtekening('htCanvasKlant')">Wis</button>
+        </div>
+        <div class="lijnlabel">Handtekening (teken met vinger, stylus of muis)</div>
       </div>
     </div>
   </div>
@@ -392,6 +404,55 @@ function rekenCV(){
     !(tO!==null&&tM!==null&&Math.abs(tO-tM)>10));
 }
 
+
+/* ── handtekeningen (canvas, vinger/stylus/muis) ── */
+const sigState={};
+function initSig(id){
+  const c=document.getElementById(id);
+  const ctx=c.getContext('2d');
+  sigState[id]={c,ctx,dirty:false};
+  function resize(){
+    const data=sigState[id].dirty?c.toDataURL():null;
+    const dpr=window.devicePixelRatio||1;
+    c.width=Math.max(1,c.offsetWidth)*dpr;
+    c.height=Math.max(1,c.offsetHeight)*dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#22302b';
+    if(data){const img=new Image();img.onload=()=>ctx.drawImage(img,0,0,c.offsetWidth,c.offsetHeight);img.src=data;}
+  }
+  resize();
+  window.addEventListener('resize',resize);
+  let bezig=false;
+  const pos=e=>{const r=c.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top];};
+  c.addEventListener('pointerdown',e=>{
+    bezig=true;c.setPointerCapture(e.pointerId);
+    const[x,y]=pos(e);
+    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+0.1,y+0.1);ctx.stroke();
+    sigState[id].dirty=true;e.preventDefault();
+  });
+  c.addEventListener('pointermove',e=>{
+    if(!bezig)return;
+    const[x,y]=pos(e);ctx.lineTo(x,y);ctx.stroke();e.preventDefault();
+  });
+  const stop=()=>{bezig=false;};
+  c.addEventListener('pointerup',stop);
+  c.addEventListener('pointercancel',stop);
+}
+function wisHandtekening(id){
+  const s=sigState[id];if(!s)return;
+  s.ctx.save();s.ctx.setTransform(1,0,0,1,0,0);
+  s.ctx.clearRect(0,0,s.c.width,s.c.height);
+  s.ctx.restore();s.dirty=false;
+}
+function zetHandtekening(id,dataURL){
+  const s=sigState[id];if(!s)return;
+  wisHandtekening(id);
+  if(!dataURL)return;
+  const img=new Image();
+  img.onload=()=>{s.ctx.drawImage(img,0,0,s.c.offsetWidth,s.c.offsetHeight);s.dirty=true;};
+  img.src=dataURL;
+}
+
 function verzamel(){
   const data={_document:'KlimaatWatt druktest CV — NBN EN 14336:2025',_versie:1};
   document.querySelectorAll('input,select,textarea').forEach(el=>{
@@ -400,6 +461,9 @@ function verzamel(){
     if(el.type==='checkbox')data['#'+el.id]=el.checked;
     else if(el.type==='radio'){if(el.checked)data['@'+el.name]=el.value;}
     else data['#'+el.id]=el.value;
+  });
+  Object.keys(sigState).forEach(id=>{
+    data['~'+id]=sigState[id].dirty?sigState[id].c.toDataURL('image/png'):'';
   });
   return data;
 }
@@ -428,6 +492,8 @@ function importeerJSON(ev){
         }else if(k.startsWith('@')){
           const el=document.querySelector('input[name="'+k.slice(1)+'"][value="'+v+'"]');
           if(el)el.checked=true;
+        }else if(k.startsWith('~')){
+          zetHandtekening(k.slice(1),v);
         }
       });
       rekenCV();
@@ -443,10 +509,13 @@ function wisFormulier(){
     else if(el.type!=='file')el.value=el.defaultValue;
   });
   document.querySelectorAll('select').forEach(el=>el.selectedIndex=0);
+  Object.keys(sigState).forEach(wisHandtekening);
   rekenCV();
 }
 
 document.getElementById('verslagdatum').valueAsDate=new Date();
+initSig('htCanvasUitvoerder');
+initSig('htCanvasKlant');
 rekenCV();
 </script>
 </body>
